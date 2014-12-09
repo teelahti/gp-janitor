@@ -17,7 +17,6 @@ Installing
 Install [Go](https://golang.org/), if not yet installed. Then run
 
     go get github.com/teelahti/gp-janitor
-    go install github.com/teelahti/gp-janitor
 
 This will download sources for this project, compile them, and "install" this package - in other words place the sources into your $GOPATH$/Src folder, and the resulting binary into your $GOPATH$/bin folder.
 
