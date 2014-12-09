@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	timerIntervalSeconds = 30
+)
+
 var exit = make(chan bool)
 
 func main() {
@@ -37,16 +41,21 @@ func stopWork() error {
 }
 
 func doWork() {
-	// TODO: Add one time run & filesystem watcher based fixes when needed
-	// use e.g. github.com/go-fsnotify/fsnotify as watcher
+	log.Printf("Timer set to %d s", timerIntervalSeconds)
 
-	ticker := time.NewTicker(30 * time.Second)
+	registerFileSystemWatcherFixes()
+	oneTimeFixes()
+
+	// Run timer based fixes once to get immediate feedback
+	// on interactive mode.
+	timerBasedFixes()
+
+	ticker := time.NewTicker(timerIntervalSeconds * time.Second)
 
 	for {
 		select {
 		case <-ticker.C:
-			// Add other time interval based fixes here
-			go fixIEConfiguration()
+			timerBasedFixes()
 
 		case <-exit:
 			log.Println("Stopping the service")
@@ -54,4 +63,18 @@ func doWork() {
 			return
 		}
 	}
+}
+
+func registerFileSystemWatcherFixes() {
+	// TODO: Add filesystem watcher based fixes when needed
+	// use e.g. github.com/go-fsnotify/fsnotify as watcher
+}
+
+func oneTimeFixes() {
+	// TODO: Add one time (on startup) run fixes here
+}
+
+func timerBasedFixes() {
+	// Add other time interval based fixes here
+	go fixIEConfiguration()
 }
