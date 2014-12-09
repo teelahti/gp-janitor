@@ -40,7 +40,7 @@ func doWork() {
 	// TODO: Add one time run & filesystem watcher based fixes when needed
 	// use e.g. github.com/go-fsnotify/fsnotify as watcher
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 
 	for {
 		select {
