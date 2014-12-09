@@ -1,7 +1,7 @@
 Group policy janitor
 ====================
 
-This is a simple program to clean Windows domain group policy cruft from the machine. What should be claned is highly subjective based on user, and the applied group policy, but this project provides a simple framework to make any kind of cleanups. Assumes that executing user has administrative priviledges to the computer. 
+This is a simple program to clean Windows domain group policy cruft from the machine. What should be cleaned is highly subjective based on user, and the applied group policy, but this project provides a simple framework to make any kind of cleanups. Assumes that executing user has administrative privileges to the computer. 
 
 There are three kind of triggers for cleaning up computer:  
 
@@ -39,4 +39,4 @@ Now open an administrative command prompt, and
 
 **Note!**
 
-As this service changes Internet Explorer registry values under the current user registry node, it cannot run as LocalSystem (Windows service default). You need to use sc.exe or open local services manager, and change the service user to you personal user account you want to keep clean. This is annoying, but there is no easy other way. Another option is to use this tool as startup command instead of a Windows service.
+As this service changes Internet Explorer registry values under the current user registry node, it cannot run as LocalSystem (Windows service default). You need to use sc.exe or open local services manager, and change the service user to your personal user account you want to keep clean. This is annoying, but there is no easy other way. Another option is to use this tool as startup command instead of a Windows service.
