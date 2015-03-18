@@ -6,7 +6,7 @@ import (
 )
 
 type RegistryKey struct {
-		hkey, path, name string
+	hkey, path, name string
 }
 
 func keepRegistryString(reg RegistryKey, targetValue string, desc string) {
