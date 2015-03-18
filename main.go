@@ -76,5 +76,6 @@ func oneTimeFixes() {
 
 func timerBasedFixes() {
 	// Add other time interval based fixes here
-	go fixIEConfiguration()
+	reg := RegistryKey{"HKCU", "Software\\Microsoft\\Internet Explorer\\Main", "Start Page"}
+	go keepRegistryString(reg, "about:Tabs", "Fix IE home page")
 }
