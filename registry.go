@@ -11,7 +11,7 @@ type RegistryKey struct {
 
 func keepRegistryString(reg RegistryKey, targetValue string, desc string) {
 
-	val, err := readRegistryString(reg)
+	val, err := gowin.GetReg(reg.hkey, reg.path, reg.name)
 
 	if err != nil {
 		log.Println("Failed to get REG value: ", err)
@@ -25,10 +25,6 @@ func keepRegistryString(reg RegistryKey, targetValue string, desc string) {
 
 	log.Printf("%v: Wrong value %q, changing it to %q... ", desc, val, targetValue)
 	writeRegistryString(reg, targetValue)
-}
-
-func readRegistryString(reg RegistryKey) (string, error) {
-	return gowin.GetReg(reg.hkey, reg.path, reg.name)
 }
 
 func writeRegistryString(reg RegistryKey, value string) error {
