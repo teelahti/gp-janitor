@@ -1,7 +1,7 @@
 Group policy janitor
 ====================
 
-This is a simple program to clean Windows domain group policy cruft from the machine. What should be cleaned is highly subjective based on user, and the applied group policy, but this project provides a simple framework to make any kind of cleanups. Assumes that executing user has administrative privileges to the computer. 
+This is a simple program to clean Windows domain group policy cruft from the machine. What should be cleaned is highly subjective based on user, and the applied group policy, but this project provides a simple framework to make any kind of cleanups. Assumes that executing user has administrative privileges to the computer.
 
 There are three kind of triggers for cleaning up computer:  
 
@@ -9,7 +9,7 @@ There are three kind of triggers for cleaning up computer:
 2. At timer interval
 3. With file system watcher
 
-Currently only #2 is implemented, as that was enough to fix the most annoying policy of forced IE home page.
+Currently only #2 is implemented, as that was enough to fix the most annoying policy of forced IE home page and WSUS-setting that prevented newer Windows OS's getting updates. 
 
 Installing
 ----------
@@ -22,12 +22,12 @@ This will download sources for this project, compile them, and "install" this pa
 
 *For more information about the Go command line tool check [official documentation](https://golang.org/cmd/go/).*
 
-Now open an administrative command prompt, and 
+Now open an administrative command prompt, and
 
     cd $GOPATH$/bin
-    
+
     # Run from within command prompt, do not attempt
-	# to run as Windows service. Use this to test 
+	# to run as Windows service. Use this to test
     # operation before installing for good
     gp-janitor -interactive
 
