@@ -1,46 +1,65 @@
 package main
 
 import (
-	// TODO: Use new official package instead https://godoc.org/golang.org/x/sys/windows/registry
-	"github.com/luisiturrios/gowin"
+	"fmt"
+	"golang.org/x/sys/windows/registry"
 	"log"
 	"strconv"
 )
 
-type RegistryKey struct{ hkey, path, name string }
-type RegistryApi func(desc string, reg RegistryKey, targetValue string)
-type RegWriter func(hkey, path, name, value string) error
+func keepRegistryValue(desc string, root registry.Key, path string, keyname string, targetValue string) {
 
-// Define the public API
-var keepRegistryString = keepRegistryValueFactory(gowin.WriteStringReg)
-var keepRegistryDword = keepRegistryValueFactory(
-	func(hkey, path, name, targetValue string) error {
-		val, _ := strconv.ParseUint(targetValue, 10, 32)
-		return gowin.WriteDwordReg(hkey, path, name, uint32(val))
-	})
+	key, err := registry.OpenKey(root, path, registry.QUERY_VALUE|registry.SET_VALUE)
 
-// Factory function to avoid code duplication
-func keepRegistryValueFactory(regWriter RegWriter) RegistryApi {
+	if err != nil {
+		log.Printf("%v: Failed to open key: %v", desc, err)
+		return
+	}
+	defer key.Close()
 
-	return func(desc string, reg RegistryKey, targetValue string) {
-		val, err := gowin.GetReg(reg.hkey, reg.path, reg.name)
+	val, valtype, err := getStringValue(key, keyname)
 
-		if err != nil {
-			log.Printf("%v: Failed to get REG value: %v", desc, err)
-			return
-		}
+	if err != nil {
+		log.Printf("%v: Failed to get REG value: %v", desc, err)
+		return
+	}
 
-		if val == targetValue {
-			log.Printf("%v: Value %q ok, no need to change.", desc, val)
-			return
-		}
+	if val == targetValue {
+		log.Printf("%v: Value %q ok, no need to change.", desc, val)
+		return
+	}
 
-		log.Printf("%v: Wrong value %q, changing it to %q... ", desc, val, targetValue)
+	log.Printf("%v: Wrong value %q, changing it to %q... ", desc, val, targetValue)
 
-		err = regWriter(reg.hkey, reg.path, reg.name, targetValue)
+	switch valtype {
+	case registry.SZ, registry.EXPAND_SZ:
+		err = key.SetStringValue(keyname, targetValue)
+	case registry.DWORD:
+		targetValueConverted, _ := strconv.ParseUint(targetValue, 10, 32)
+		err = key.SetDWordValue(keyname, uint32(targetValueConverted))
+	default:
+		log.Fatal("Unsupported registry value type %s", valtype)
+	}
 
-		if err != nil {
-			log.Printf("%v: Changing the value failed: %v", desc, err)
-		}
+	if err != nil {
+		log.Printf("%v: Changing the value failed: %v", desc, err)
+	}
+}
+
+func getStringValue(key registry.Key, name string) (string, uint32, error) {
+	_, valtype, err := key.GetValue(name, nil)
+
+	if err != nil {
+		return "", registry.NONE, err
+	}
+
+	switch valtype {
+	case registry.SZ, registry.EXPAND_SZ:
+		return key.GetStringValue(name)
+	case registry.DWORD:
+		val, valtype, err := key.GetIntegerValue(name)
+		return strconv.FormatUint(val, 10), valtype, err
+	default:
+		return "", registry.NONE, fmt.Errorf("Unsupported registry value type %s", valtype)
 	}
 }

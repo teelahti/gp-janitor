@@ -1,14 +1,23 @@
 package main
 
+import (
+	"golang.org/x/sys/windows/registry"
+)
+
 func timerBasedFixes() {
 	// Add other time interval based fixes here
-	go keepRegistryString(
+
+	go keepRegistryValue(
 		"Fix IE home page",
-		RegistryKey{"HKCU", `Software\Microsoft\Internet Explorer\Main`, "Start Page"},
+		registry.CURRENT_USER,
+		`Software\Microsoft\Internet Explorer\Main`,
+		"Start Page",
 		"about:Tabs")
 
-	go keepRegistryDword(
+	go keepRegistryValue(
 		"Disable WSUS",
-		RegistryKey{"HKLM", `SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU`, "UseWUServer"},
-		"")
+		registry.LOCAL_MACHINE,
+		`SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU`,
+		"UseWUServer",
+		"0")
 }
