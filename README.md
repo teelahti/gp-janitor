@@ -29,13 +29,13 @@ Now open an administrative command prompt, and
     # Run from within command prompt, do not attempt
 	# to run as Windows service. Use this to test
     # operation before installing for good
-    gp-janitor -interactive
+    gp-janitor debug
 
     # Install as Windows service
-    gp-janitor -register
+    gp-janitor install
 
     # Remove windows service registration
-    gp-janitor -unregister
+    gp-janitor remove
 
 **Note!**
 

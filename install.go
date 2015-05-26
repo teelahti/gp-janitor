@@ -1,55 +1,91 @@
 package main
 
 import (
-	"bitbucket.org/kardianos/service"
-	"log"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"golang.org/x/sys/windows/svc/eventlog"
+	"golang.org/x/sys/windows/svc/mgr"
 )
 
-// Running and installing as a service
-const (
-	serviceName = "GP-Janitor"
-	displayName = "Group Policy Janitor"
-	description = "This is a home-made service that keeps some extra windows " +
-		"group policy stuff out of this computer"
-)
-
-var serv, err = service.NewService(serviceName, displayName, description)
-
-type operation func() error
-
-func register() {
-	log.Printf("Registering as service with service name %q...", serviceName)
-	serviceOperation(serv.Install)
-	log.Printf("NOTE!: To allow changes in your own registry tree, " +
-		"you must change the service to be run on your own user " +
-		"account either with the SVC UI tool, or with " +
-		"'sc config GP-Janitor obj= yourUserName password= yourPassword.")
-
-	start()
-}
-
-func start() {
-	log.Println("Starting service...")
-	serviceOperation(serv.Start)
-}
-
-func unregister() {
-	log.Println("Removing (unregistering) service...")
-
-	serviceOperation(func() error {
-		err = serv.Stop()
-		err = serv.Remove()
-		return err
-	})
-}
-
-func serviceOperation(fn operation) {
-	// Execute operation
-	err := fn()
-
+func exePath() (string, error) {
+	prog := os.Args[0]
+	p, err := filepath.Abs(prog)
 	if err != nil {
-		log.Fatal("Failed: ", err)
+		return "", err
+	}
+	fi, err := os.Stat(p)
+	if err == nil {
+		if !fi.Mode().IsDir() {
+			return p, nil
+		}
+		err = fmt.Errorf("%s is directory", p)
+	}
+	if filepath.Ext(p) == "" {
+		p += ".exe"
+		fi, err := os.Stat(p)
+		if err == nil {
+			if !fi.Mode().IsDir() {
+				return p, nil
+			}
+			err = fmt.Errorf("%s is directory", p)
+		}
+	}
+	return "", err
+}
+
+func installService(name, displayName string, desc string) error {
+	exepath, err := exePath()
+	if err != nil {
+		return err
+	}
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(name)
+	if err == nil {
+		s.Close()
+		return fmt.Errorf("service %s already exists", name)
 	}
 
-	log.Println("...done")
+	s, err = m.CreateService(name, exepath, mgr.Config{
+		StartType:   mgr.StartAutomatic,
+		DisplayName: displayName,
+		Description: desc}, "is", "auto-started")
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	err = eventlog.InstallAsEventCreate(name, eventlog.Error|eventlog.Warning|eventlog.Info)
+	if err != nil {
+		s.Delete()
+		return fmt.Errorf("SetupEventLogSource() failed: %s", err)
+	}
+	return nil
+}
+
+func removeService(name string) error {
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService(name)
+	if err != nil {
+		return fmt.Errorf("service %s is not installed", name)
+	}
+	defer s.Close()
+	err = s.Delete()
+	if err != nil {
+		return err
+	}
+	err = eventlog.Remove(name)
+	if err != nil {
+		return fmt.Errorf("RemoveEventLogSource() failed: %s", err)
+	}
+	return nil
 }

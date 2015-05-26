@@ -1,89 +1,70 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"time"
+	"os"
+	"strings"
+
+	"golang.org/x/sys/windows/svc"
 )
 
 const (
-	timerIntervalSeconds = 30
+	serviceName = "GP-Janitor"
+	displayName = "Group Policy Janitor"
+	description = "This is a home-made service that keeps some extra windows " +
+		"group policy stuff out of this computer"
 )
 
-var exit = make(chan bool)
-
 func main() {
-	specialFlags()
+	// check, whether this is an interactive command line session
+	isIntSess, err := svc.IsAnInteractiveSession()
+	if err != nil {
+		log.Fatal("failed to determine if we are running in an interactive session: ", err)
+	}
 
-	// Option A: Run from command line with interactive switch
-	if *flags.interactive {
-		doWork()
+	if !isIntSess {
+		runService(serviceName, false)
 		return
 	}
 
-	// Option B: Run as a windows service
-	// Launch the main loop through kardianos/service
-	err := serv.Run(startWork, stopWork)
-
-	if err != nil {
-		serv.Error(err.Error())
-		log.Fatal(err)
+	if len(os.Args) < 2 {
+		usage("no command specified")
 	}
-}
 
-func startWork() error {
-	go doWork()
-	return nil
-}
+	cmd := strings.ToLower(os.Args[1])
+	switch cmd {
+	case "debug":
+		runService(serviceName, true)
+		return
+	case "install":
+		err = installService(serviceName, displayName, description)
+		if err == nil {
+			// TODO: Give username and password	as args and remove this message
+			log.Print("Installed as a Windows service")
+			log.Printf("NOTE!: To allow changes in your own registry tree, " +
+				"you must change the service to be run on your own user " +
+				"account either with the SVC UI tool, or with " +
+				"'sc config GP-Janitor obj= yourUserName password= yourPassword.")
 
-func stopWork() error {
-	exit <- true
-	return nil
-}
-
-func doWork() {
-	log.Printf("Timer set to %d s", timerIntervalSeconds)
-
-	registerFileSystemWatcherFixes()
-	oneTimeFixes()
-
-	// Run timer based fixes once to get immediate feedback
-	// on interactive mode.
-	timerBasedFixes()
-
-	ticker := time.NewTicker(timerIntervalSeconds * time.Second)
-
-	for {
-		select {
-		case <-ticker.C:
-			timerBasedFixes()
-
-		case <-exit:
-			log.Println("Stopping the service")
-			ticker.Stop()
-			return
+			// Start newly installed service
+			err = startService(serviceName)
 		}
+	case "remove":
+		err = removeService(serviceName)
+	case "start":
+		err = startService(serviceName)
+	case "stop":
+		err = controlService(serviceName, svc.Stop, svc.Stopped)
+	case "pause":
+		err = controlService(serviceName, svc.Pause, svc.Paused)
+	case "continue":
+		err = controlService(serviceName, svc.Continue, svc.Running)
+	default:
+		usage(fmt.Sprintf("invalid command %s", cmd))
 	}
-}
-
-func registerFileSystemWatcherFixes() {
-	// TODO: Add filesystem watcher based fixes when needed
-	// use e.g. github.com/go-fsnotify/fsnotify as watcher
-}
-
-func oneTimeFixes() {
-	// TODO: Add one time (on startup) run fixes here
-}
-
-func timerBasedFixes() {
-	// Add other time interval based fixes here
-
-	go keepRegistryString(
-		"Fix IE home page",
-		RegistryKey{"HKCU", `Software\Microsoft\Internet Explorer\Main`, "Start Page"},
-		"about:Tabs")
-
-	go keepRegistryDword(
-		"Disable WSUS",
-		RegistryKey{"HKLM", `SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU`, "UseWUServer"},
-		"")
+	if err != nil {
+		log.Fatalf("failed to %s %s: %v", cmd, serviceName, err)
+	}
+	return
 }
