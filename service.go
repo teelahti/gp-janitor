@@ -47,7 +47,7 @@ loop:
 				changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 				tick = fasttick
 			default:
-				elog.Error(1, fmt.Sprintf("unexpected control request #%d", c))
+				elog.Error(1, fmt.Sprintf("Unexpected control request #%d", c))
 			}
 		}
 	}
@@ -67,7 +67,7 @@ func runService(name string, isDebug bool) {
 	}
 	defer elog.Close()
 
-	elog.Info(1, fmt.Sprintf("starting %s service", name))
+	elog.Info(1, fmt.Sprintf("Starting %s service", name))
 	run := svc.Run
 	if isDebug {
 		run = debug.Run

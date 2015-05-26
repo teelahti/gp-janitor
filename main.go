@@ -33,7 +33,7 @@ func main() {
 	// check, whether this is an interactive command line session
 	isIntSess, err := svc.IsAnInteractiveSession()
 	if err != nil {
-		log.Fatal("failed to determine if we are running in an interactive session: ", err)
+		log.Fatal("Failed to determine if we are running in an interactive session: ", err)
 	}
 
 	if !isIntSess {
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		usage("no command specified")
+		usage("No command specified")
 	}
 
 	cmd := strings.ToLower(os.Args[1])
@@ -54,7 +54,7 @@ func main() {
 		err = installService(serviceName, displayName, description)
 		if err == nil {
 			// TODO: Give username and password	as args and remove this message
-			log.Print("Installed as a Windows service")
+			log.Print("Installed as a Windows service.")
 			log.Printf("NOTE!: To allow changes in your own registry tree, " +
 				"you must change the service to be run on your own user " +
 				"account either with the SVC UI tool, or with " +
@@ -74,7 +74,7 @@ func main() {
 	case "continue":
 		err = controlService(serviceName, svc.Continue, svc.Running)
 	default:
-		usage(fmt.Sprintf("invalid command %s", cmd))
+		usage(fmt.Sprintf("Invalid command %s", cmd))
 	}
 	if err != nil {
 		log.Fatalf("failed to %s %s: %v", cmd, serviceName, err)
