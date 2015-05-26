@@ -16,6 +16,16 @@ const (
 		"group policy stuff out of this computer"
 )
 
+func usage(errmsg string) {
+	fmt.Fprintf(os.Stderr,
+		"%s\n\n"+
+			"usage: %s <command>\n"+
+			"       where <command> is one of\n"+
+			"       install, remove, debug, start, stop, pause or continue.\n",
+		errmsg, os.Args[0])
+	os.Exit(2)
+}
+
 func main() {
 	// check, whether this is an interactive command line session
 	isIntSess, err := svc.IsAnInteractiveSession()
