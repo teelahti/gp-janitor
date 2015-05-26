@@ -27,6 +27,9 @@ func usage(errmsg string) {
 }
 
 func main() {
+	// Service management is taken directly from x/sys/windows/svc samples:
+	// https://github.com/golang/sys/tree/master/windows/svc/example
+	
 	// check, whether this is an interactive command line session
 	isIntSess, err := svc.IsAnInteractiveSession()
 	if err != nil {
