@@ -27,7 +27,7 @@ func usage(errmsg string) {
 }
 
 func main() {
-	// Service management is taken directly from x/sys/windows/svc samples:
+	// Service management is imitated from x/sys/windows/svc samples:
 	// https://github.com/golang/sys/tree/master/windows/svc/example
 	
 	// check, whether this is an interactive command line session
