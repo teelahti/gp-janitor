@@ -1,6 +1,7 @@
 package main
 
 import (
+	// TODO: Use new official package instead https://godoc.org/golang.org/x/sys/windows/registry
 	"github.com/luisiturrios/gowin"
 	"log"
 	"strconv"
